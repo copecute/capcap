@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Capcap</string>
+	<string>Cap Cap</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>capcap</string>
+	<string>Cap Cap</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -43,7 +43,13 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Cap Cap needs access to your photos and videos for editing.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Cap Cap needs permission to save edited media to your library.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Cap Cap needs camera access to record video.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Cap Cap needs microphone access to record audio.</string>
 </dict>
 </plist>
