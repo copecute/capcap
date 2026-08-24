@@ -28,8 +28,8 @@ class ProjectThumb extends StatelessWidget {
       if (file.existsSync()) {
         child = Image.file(
           file,
-          width: width,
-          height: height,
+          width: width.isFinite ? width : null,
+          height: height.isFinite ? height : null,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => _fallback(icon),
         );
@@ -42,15 +42,20 @@ class ProjectThumb extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: SizedBox(width: width, height: height, child: child),
+      child: SizedBox(
+        width: width.isFinite ? width : double.infinity,
+        height: height.isFinite ? height : double.infinity,
+        child: child,
+      ),
     );
   }
 
   Widget _fallback(IconData icon) {
+    final iconSize = (width.isFinite ? width : 72) * 0.35;
     return ColoredBox(
       color: const Color(0xFF00C2FF).withValues(alpha: 0.18),
       child: Center(
-        child: Icon(icon, color: const Color(0xFF00C2FF), size: width * 0.4),
+        child: Icon(icon, color: const Color(0xFF00C2FF), size: iconSize),
       ),
     );
   }

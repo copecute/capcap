@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/editor_project.dart';
 import '../../../providers/project_provider.dart';
 import '../../../services/thumb_cache.dart';
+import '../../../utils/responsive.dart';
 import '../../../widgets/project_thumb.dart';
 import '../../media/media_picker_screen.dart';
 
@@ -68,36 +69,56 @@ class EditTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final width = MediaQuery.sizeOf(context).width;
-    final horizontalPadding = width >= 1024 ? 24.0 : 16.0;
+    final layout = AppLayout.of(context);
+    final pad = layout.pagePadding;
     final projects = context.watch<ProjectProvider>().projects;
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: _BannerSlideshow(l: l),
+          child: _BannerSlideshow(l: l, layout: layout),
         ),
         SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          padding: EdgeInsets.fromLTRB(pad, 0, pad, pad),
           sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                _CreateButtons(
-                  l: l,
-                  isDark: isDark,
-                  onNewVideo: () => _openPicker(context, MediaPickerMode.video),
-                  onEditPhoto: () => _openPicker(context, MediaPickerMode.photo),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: layout.contentMaxWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    _CreateButtons(
+                      l: l,
+                      isDark: isDark,
+                      wide: layout.useSidebar,
+                      onNewVideo: () => _openPicker(context, MediaPickerMode.video),
+                      onEditPhoto: () => _openPicker(context, MediaPickerMode.photo),
+                    ),
+                    if (projects.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        l.get('tab_project'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _RecentProjects(
+                        isDark: isDark,
+                        l: l,
+                        projects: projects,
+                        desktop: layout.useSidebar,
+                      ),
+                    ],
+                    const SizedBox(height: 28),
+                    _ToolsGrid(l: l, isDark: isDark, layout: layout),
+                    const SizedBox(height: 24),
+                  ],
                 ),
-                if (projects.isNotEmpty) ...[
-                  const SizedBox(height: 20),
-                  _RecentProjects(isDark: isDark, l: l, projects: projects),
-                ],
-                const SizedBox(height: 24),
-                _ToolsGrid(l: l, isDark: isDark),
-                const SizedBox(height: 24),
-              ],
+              ),
             ),
           ),
         ),
@@ -108,7 +129,8 @@ class EditTab extends StatelessWidget {
 
 class _BannerSlideshow extends StatefulWidget {
   final AppLocalizations l;
-  const _BannerSlideshow({required this.l});
+  final AppLayout layout;
+  const _BannerSlideshow({required this.l, required this.layout});
 
   @override
   State<_BannerSlideshow> createState() => _BannerSlideshowState();
@@ -150,93 +172,115 @@ class _BannerSlideshowState extends State<_BannerSlideshow> {
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
-    return SizedBox(
-      height: 200 + top,
-      child: Stack(
-        children: [
-          PageView.builder(
-            controller: _controller,
-            onPageChanged: (i) => setState(() => _index = i),
-            itemCount: _banners.length,
-            itemBuilder: (context, i) {
-              return Image.asset(
-                _banners[i],
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              );
-            },
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 48,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.35)],
-                ),
+    final desktop = widget.layout.useSidebar;
+    final bannerHeight = widget.layout.isExpanded
+        ? 320.0
+        : (desktop ? 240.0 : 200.0);
+    final overlayTop = desktop ? 12.0 : top + 8;
+    return Padding(
+      padding: desktop
+          ? EdgeInsets.fromLTRB(
+              widget.layout.pagePadding,
+              top + 16,
+              widget.layout.pagePadding,
+              0,
+            )
+          : EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: desktop ? BorderRadius.circular(20) : BorderRadius.zero,
+        child: SizedBox(
+          height: desktop ? bannerHeight : bannerHeight + top,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              PageView.builder(
+                controller: _controller,
+                onPageChanged: (i) => setState(() => _index = i),
+                itemCount: _banners.length,
+                itemBuilder: (context, i) {
+                  return Image.asset(
+                    _banners[i],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  );
+                },
               ),
-            ),
-          ),
-          Positioned(
-            top: top + 8,
-            right: 12,
-            child: Material(
-              color: Colors.black.withValues(alpha: 0.35),
-              shape: const CircleBorder(),
-              child: IconButton(
-                tooltip: widget.l.get('search'),
-                icon: const Icon(Icons.search_rounded, color: Colors.white),
-                onPressed: () => setState(() => _searchOpen = !_searchOpen),
-              ),
-            ),
-          ),
-          if (_searchOpen)
-            Positioned(
-              top: top + 8,
-              left: 12,
-              right: 64,
-              child: Material(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: widget.l.get('search_hint'),
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  ),
-                ),
-              ),
-            ),
-          Positioned(
-            bottom: 12,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_banners.length, (i) {
-                final active = i == _index;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: active ? 16 : 7,
-                  height: 7,
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 56,
+                child: DecoratedBox(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: active ? Colors.white : Colors.white54,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Color(0x99000000)],
+                    ),
                   ),
-                );
-              }),
-            ),
+                ),
+              ),
+              Positioned(
+                top: overlayTop,
+                right: 12,
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  shape: const CircleBorder(),
+                  child: IconButton(
+                    tooltip: widget.l.get('search'),
+                    icon: const Icon(Icons.search_rounded, color: Colors.white),
+                    onPressed: () => setState(() => _searchOpen = !_searchOpen),
+                  ),
+                ),
+              ),
+              if (_searchOpen)
+                Positioned(
+                  top: overlayTop,
+                  left: 12,
+                  right: 64,
+                  child: Material(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    child: TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: widget.l.get('search_hint'),
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              Positioned(
+                bottom: 12,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_banners.length, (i) {
+                    final active = i == _index;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: active ? 16 : 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: active ? Colors.white : Colors.white54,
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -245,18 +289,20 @@ class _BannerSlideshowState extends State<_BannerSlideshow> {
 class _CreateButtons extends StatelessWidget {
   final AppLocalizations l;
   final bool isDark;
+  final bool wide;
   final VoidCallback onNewVideo;
   final VoidCallback onEditPhoto;
   const _CreateButtons({
     required this.l,
     required this.isDark,
+    required this.wide,
     required this.onNewVideo,
     required this.onEditPhoto,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       children: [
         Expanded(
           child: _CreateCard(
@@ -266,9 +312,10 @@ class _CreateButtons extends StatelessWidget {
               colors: [Color(0xFF1A1A2E), Color(0xFF252540)],
             ),
             onTap: onNewVideo,
+            tall: wide,
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: wide ? 16 : 12),
         Expanded(
           child: _CreateCard(
             icon: Icons.photo_rounded,
@@ -280,9 +327,18 @@ class _CreateButtons extends StatelessWidget {
             ),
             onTap: onEditPhoto,
             isLight: !isDark,
+            tall: wide,
           ),
         ),
       ],
+    );
+    if (!wide) return row;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: row,
+      ),
     );
   }
 }
@@ -293,6 +349,7 @@ class _CreateCard extends StatelessWidget {
   final Gradient gradient;
   final VoidCallback onTap;
   final bool isLight;
+  final bool tall;
 
   const _CreateCard({
     required this.icon,
@@ -300,6 +357,7 @@ class _CreateCard extends StatelessWidget {
     required this.gradient,
     required this.onTap,
     this.isLight = false,
+    this.tall = false,
   });
 
   @override
@@ -310,7 +368,7 @@ class _CreateCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Ink(
-          height: 80,
+          height: tall ? 108 : 80,
           decoration: BoxDecoration(
             gradient: gradient,
             borderRadius: BorderRadius.circular(16),
@@ -353,31 +411,35 @@ class _RecentProjects extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l;
   final List<EditorProject> projects;
+  final bool desktop;
   const _RecentProjects({
     required this.isDark,
     required this.l,
     required this.projects,
+    required this.desktop,
   });
 
   @override
   Widget build(BuildContext context) {
+    final w = desktop ? 120.0 : 70.0;
+    final h = desktop ? 132.0 : 80.0;
     return SizedBox(
-      height: 80,
+      height: h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: projects.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => SizedBox(width: desktop ? 12 : 8),
         itemBuilder: (context, i) {
           final project = projects[i];
           return SizedBox(
-            width: 70,
+            width: w,
             child: Stack(
               children: [
                 ProjectThumb(
                   path: project.thumbnailPath,
                   projectType: project.type,
-                  width: 70,
-                  height: 80,
+                  width: w,
+                  height: h,
                   radius: 12,
                 ),
                 Positioned(
@@ -426,12 +488,20 @@ class _RecentProjects extends StatelessWidget {
 class _ToolsGrid extends StatelessWidget {
   final AppLocalizations l;
   final bool isDark;
-  const _ToolsGrid({required this.l, required this.isDark});
+  final AppLayout layout;
+  const _ToolsGrid({
+    required this.l,
+    required this.isDark,
+    required this.layout,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final crossAxisCount = width >= 1100 ? 6 : (width >= 760 ? 4 : 3);
+    final crossAxisCount = layout.gridColumns(
+      compact: 3,
+      medium: 5,
+      expanded: 8,
+    );
 
     final tools = [
       _Tool(Icons.content_cut_rounded, l.get('autocut'), const Color(0xFF00C2FF)),
@@ -452,7 +522,7 @@ class _ToolsGrid extends StatelessWidget {
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 1.0,
+        childAspectRatio: layout.useSidebar ? 0.92 : 1.0,
       ),
       itemCount: tools.length,
       itemBuilder: (context, i) {

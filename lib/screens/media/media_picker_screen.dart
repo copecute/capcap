@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/thumb_cache.dart';
+import '../../utils/responsive.dart';
 
 enum MediaPickerMode { video, photo }
 
@@ -351,20 +352,30 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
       if (_albums.isEmpty) {
         return Center(child: Text(l.get('no_media')));
       }
-      return ListView.separated(
+      return GridView.builder(
+        padding: const EdgeInsets.all(12),
+        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: AppLayout.of(context).useSidebar ? 360 : 600,
+          mainAxisExtent: 72,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+        ),
         itemCount: _albums.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, i) {
           final album = _albums[i];
-          return ListTile(
-            leading: const Icon(Icons.folder_rounded, color: Color(0xFF00C2FF)),
-            title: Text(album.name),
-            subtitle: FutureBuilder<int>(
-              future: album.assetCountAsync,
-              builder: (context, snap) =>
-                  Text('${snap.data ?? 0} ${l.get('items')}'),
+          return Material(
+            color: Theme.of(context).cardTheme.color,
+            borderRadius: BorderRadius.circular(12),
+            child: ListTile(
+              leading: const Icon(Icons.folder_rounded, color: Color(0xFF00C2FF)),
+              title: Text(album.name),
+              subtitle: FutureBuilder<int>(
+                future: album.assetCountAsync,
+                builder: (context, snap) =>
+                    Text('${snap.data ?? 0} ${l.get('items')}'),
+              ),
+              onTap: () => _openAlbum(album),
             ),
-            onTap: () => _openAlbum(album),
           );
         },
       );
@@ -381,8 +392,8 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
       },
       child: GridView.builder(
         padding: const EdgeInsets.all(4),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: AppLayout.of(context).mediaColumns(),
           mainAxisSpacing: 4,
           crossAxisSpacing: 4,
         ),

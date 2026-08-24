@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/responsive.dart';
 import 'step1_intro.dart';
 import 'step2_permissions.dart';
 import 'step3_login.dart';
@@ -74,7 +75,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 )
               : null,
         ),
-        body: PageView(
+        body: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppLayout.of(context).useSidebar ? 560 : double.infinity,
+            ),
+            child: PageView(
           controller: _pageController,
           physics: const NeverScrollableScrollPhysics(),
           onPageChanged: (p) => setState(() => _currentPage = p),
@@ -83,6 +89,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             Step2Permissions(onNext: _next, l: l, isDark: isDark),
             Step3Login(l: l, isDark: isDark),
           ],
+            ),
+          ),
         ),
         bottomNavigationBar: SafeArea(
           child: Padding(

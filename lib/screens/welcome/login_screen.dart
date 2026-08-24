@@ -14,7 +14,12 @@ class LoginScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: Step3Login(l: l, isDark: isDark),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Step3Login(l: l, isDark: isDark),
+        ),
+      ),
     );
   }
 }

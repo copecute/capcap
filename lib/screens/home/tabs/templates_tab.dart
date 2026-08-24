@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../utils/responsive.dart';
 
 class TemplatesTab extends StatelessWidget {
   final AppLocalizations l;
@@ -8,18 +9,23 @@ class TemplatesTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final layout = AppLayout.of(context);
+    final pad = layout.pagePadding;
     final categories = [l.get('trending'), l.get('new_label'), 'Vlog', 'Travel', 'Food', 'Music'];
 
     return SafeArea(
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            padding: EdgeInsets.fromLTRB(pad, 16, pad, 0),
             child: Row(
               children: [
                 Text(
                   l.get('templates_title'),
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: layout.useSidebar ? 24 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
                 Icon(Icons.search_rounded, color: isDark ? Colors.white70 : Colors.black54),
@@ -31,7 +37,7 @@ class TemplatesTab extends StatelessWidget {
             height: 36,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: pad),
               itemCount: categories.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, i) {
@@ -59,9 +65,9 @@ class TemplatesTab extends StatelessWidget {
           const SizedBox(height: 16),
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              padding: EdgeInsets.fromLTRB(pad, 0, pad, pad),
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: layout.useSidebar ? 220 : 200,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: 0.72,
@@ -84,7 +90,7 @@ class TemplatesTab extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Container(
+                        DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: colorPair,
@@ -95,7 +101,7 @@ class TemplatesTab extends StatelessWidget {
                           child: Center(
                             child: Icon(
                               Icons.play_circle_fill_rounded,
-                              size: 48,
+                              size: layout.useSidebar ? 56 : 48,
                               color: Colors.white.withValues(alpha: 0.6),
                             ),
                           ),
@@ -108,7 +114,10 @@ class TemplatesTab extends StatelessWidget {
                             padding: const EdgeInsets.fromLTRB(10, 16, 10, 10),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [Colors.transparent, Colors.black.withValues(alpha: 0.6)],
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.6),
+                                ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                               ),

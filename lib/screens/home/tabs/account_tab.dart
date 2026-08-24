@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/app_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/thumb_cache.dart';
+import '../../../utils/responsive.dart';
 
 class AccountTab extends StatelessWidget {
   final AppLocalizations l;
@@ -14,9 +15,15 @@ class AccountTab extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: AppLayout.of(context).useSidebar ? 640 : double.infinity,
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(AppLayout.of(context).pagePadding),
+            child: Column(
           children: [
             const SizedBox(height: 8),
             // Avatar & name
@@ -109,6 +116,8 @@ class AccountTab extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: isDark ? Colors.white30 : Colors.black26),
             ),
           ],
+            ),
+          ),
         ),
       ),
     );
@@ -125,11 +134,8 @@ class AccountTab extends StatelessWidget {
   }
 
   void _showLanguageDialog(BuildContext context, AppProvider provider, AppLocalizations l) {
-    showModalBottomSheet(
+    showAppSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -166,11 +172,8 @@ class AccountTab extends StatelessWidget {
   }
 
   void _showThemeDialog(BuildContext context, AppProvider provider, AppLocalizations l) {
-    showModalBottomSheet(
+    showAppSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
